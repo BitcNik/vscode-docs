@@ -1,4 +1,4 @@
----
+Abre el archivo .py en tu editor (VS Code, Thonny, etc.)
 ContentId:
 DateApproved: 07/09/2025
 MetaDescription: Running Python Code in Visual Studio Code

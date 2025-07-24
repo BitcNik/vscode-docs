@@ -1,16 +1,825 @@
-{
-  "tool": "Credential Scanner",
-  "suppressions": [
-    {
-      "file": [
-        "dist/server/views/raw/v1_51.md",
-        "dist/server/views/raw/v1_8.md",
-        "release-notes/v1_51.md",
-        "release-notes/v1_8.md",
-        "docs/nodejs/nodejs-debugging.md",
-        "docs/python/environments.md"
-      ],
-      "_justification": "These are not real passwords. For documentation purposes only."
-    }
-  ]
-}
+import random
+import json
+from datetime import datetime
+from typing import Dict, List, Optional
+import re
+
+class ChatbotEduSuperior:
+    def __init__(self):
+        self.usuario = ""
+        self.tipo_usuario = "docente"  # docente, estudiante, investigador, coordinador
+        self.area_conocimiento = ""
+        self.nivel_academico = "licenciatura"  # licenciatura, maestría, doctorado
+        self.modalidad = "presencial"  # presencial, virtual, híbrida
+        self.asignatura = ""
+        self.tema = ""
+        self.creditos = 3
+        self.conversacion = []
+
+        # Base de conocimiento específico para educación superior
+        self.metodologias_universitarias = {
+            "aprendizaje_basado_en_investigacion": {
+                "descripcion": "Metodología donde los estudiantes investigan problemas reales",
+                "caracteristicas": [
+                    "Formulación de preguntas de investigación",
+                    "Diseño de metodologías",
+                    "Análisis crítico de fuentes",
+                    "Comunicación de resultados"
+                ],
+                "aplicacion": "Ideal para seminarios y cursos avanzados"
+            },
+            "aprendizaje_basado_en_proyectos": {
+                "descripcion": "Aprendizaje mediante proyectos complejos y multidisciplinarios",
+                "caracteristicas": [
+                    "Trabajo colaborativo",
+                    "Aplicación práctica",
+                    "Gestión de recursos",
+                    "Presentación profesional"
+                ],
+                "aplicacion": "Adecuado para todas las disciplinas"
+            },
+            "seminario": {
+                "descripcion": "Metodología centrada en discusión académica y análisis crítico",
+                "caracteristicas": [
+                    "Lectura crítica de textos",
+                    "Discusión guiada",
+                    "Presentación oral",
+                    "Producción académica"
+                ],
+                "aplicacion": "Especialmente efectiva en humanidades y ciencias sociales"
+            },
+            "caso_clinico": {
+                "descripcion": "Análisis de casos reales para la toma de decisiones",
+                "caracteristicas": [
+                    "Identificación de problemas",
+                    "Análisis de múltiples perspectivas",
+                    "Toma de decisiones informada",
+                    "Justificación de opciones"
+                ],
+                "aplicacion": "Muy efectiva en áreas profesionales y de salud"
+            }
+        }
+
+        self.competencias_genericas = [
+            "Pensamiento crítico y analítico",
+            "Comunicación académica efectiva",
+            "Trabajo colaborativo y liderazgo",
+            "Innovación y creatividad",
+            "Responsabilidad social y ética",
+            "Aprendizaje autónomo y continuo",
+            "Gestión del conocimiento",
+            "Competencias digitales avanzadas"
+        ]
+
+        self.competencias_especificas = {
+            "ciencias_sociales": [
+                "Análisis histórico-crítico",
+                "Interpretación de fuentes primarias",
+                "Construcción de argumentos teóricos",
+                "Comparación intercultural"
+            ],
+            "ciencias_exactas": [
+                "Modelización matemática",
+                "Método científico experimental",
+                "Análisis estadístico avanzado",
+                "Resolución de problemas complejos"
+            ],
+            "humanidades": [
+                "Análisis textual y hermenéutico",
+                "Construcción de narrativas",
+                "Pensamiento filosófico",
+                "Creatividad artística"
+            ],
+            "ciencias_de_la_salud": [
+                "Diagnóstico clínico",
+                "Toma de decisiones basada en evidencia",
+                "Ética profesional",
+                "Atención centrada en el paciente"
+            ],
+            "ingenieria": [
+                "Diseño de sistemas",
+                "Optimización de procesos",
+                "Gestión de proyectos tecnológicos",
+                "Innovación en ingeniería"
+            ]
+        }
+
+        self.instrumentos_evaluacion = {
+            "formativa": [
+                "Rúbricas de coevaluación",
+                "Portafolios reflexivos",
+                "Diarios de aprendizaje",
+                "Evaluación entre pares",
+                "Autoevaluación crítica"
+            ],
+            "sumativa": [
+                "Ensayos académicos",
+                "Proyectos de investigación",
+                "Presentaciones orales profesionales",
+                "Exámenes conceptuales",
+                "Productos multimedia"
+            ]
+        }
+
+        self.recursos_academicos = {
+            "bibliograficos": [
+                "Bases de datos especializadas (JSTOR, Scopus, Web of Science)",
+                "Repositorios institucionales",
+                "Bibliotecas digitales",
+                "Revistas científicas indexadas"
+            ],
+            "tecnologicos": [
+                "Plataformas LMS avanzadas (Canvas, Moodle Enterprise)",
+                "Herramientas de análisis de datos (SPSS, R, Python)",
+                "Software especializado por disciplina",
+                "Laboratorios virtuales"
+            ],
+            "colaborativos": [
+                "Google Workspace for Education",
+                "Microsoft 365 para instituciones",
+                "Herramientas de gestión de proyectos (Trello, Asana)",
+                "Plataformas de videoconferencia académica"
+            ]
+        }
+
+    def saludar(self):
+        return """🎓 ¡Bienvenido/a al Chatbot Pedagógico para Educación Superior!
+
+Soy tu asistente académico especializado en:
+✅ Diseño curricular universitario
+✅ Planes de estudio y programas académicos
+✅ Metodologías de enseñanza superior
+✅ Evaluación académica avanzada
+✅ Integración de investigación y docencia
+✅ Competencias profesionales y genéricas
+
+¿Eres docente universitario, estudiante de posgrado, investigador o coordinador académico?"""
+
+    def crear_programa_asignatura(self, asignatura: str, creditos: int = 3, area: str = "",
+                                nivel: str = "licenciatura", modalidad: str = "presencial") -> Dict:
+        """Crea un programa completo de asignatura universitaria"""
+
+        programa = {
+            "identificacion": {
+                "nombre_asignatura": asignatura,
+                "codigo": self._generar_codigo(asignatura),
+                "creditos": creditos,
+                "area_conocimiento": area,
+                "nivel_academico": nivel,
+                "modalidad": modalidad,
+                "periodo_academico": "2024-1",
+                "fecha_elaboracion": datetime.now().strftime("%Y-%m-%d")
+            },
+            "descripcion": self._generar_descripcion(asignatura, area),
+            "justificacion": self._generar_justificacion(asignatura, area, nivel),
+            "objetivo_general": self._generar_objetivo_general(asignatura, area),
+            "objetivos_especificos": self._generar_objetivos_especificos(asignatura, area),
+            "competencias": self._definir_competencias(area),
+            "contenido_tematico": self._estructurar_contenido(creditos),
+            "metodologia": self._seleccionar_metodologia_avanzada(),
+            "evaluacion": self._disenar_evaluacion_superior(),
+            "bibliografia": self._generar_bibliografia(area),
+            "recursos_didacticos": self._seleccionar_recursos_academicos(),
+            "cronograma": self._generar_cronograma(creditos)
+        }
+
+        return programa
+
+    def _generar_codigo(self, asignatura: str) -> str:
+        """Genera un código para la asignatura"""
+        palabras = asignatura.split()
+        if len(palabras) >= 2:
+            codigo = "".join([palabra[:2].upper() for palabra in palabras[:2]])
+        else:
+            codigo = asignatura[:4].upper()
+        return f"{codigo}{random.randint(100, 999)}"
+
+    def _generar_descripcion(self, asignatura: str, area: str) -> str:
+        """Genera descripción de la asignatura"""
+        return f"""Esta asignatura proporciona una introducción teórica y práctica al estudio de {asignatura}
+dentro del campo de {area}. Se abordan los fundamentos conceptuales, metodológicos y aplicativos
+que permiten al estudiante desarrollar una comprensión profunda de los principios y prácticas
+contemporáneas en esta disciplina."""
+
+    def _generar_justificacion(self, asignatura: str, area: str, nivel: str) -> str:
+        """Genera justificación de la asignatura"""
+        return f"""La asignatura {asignatura} responde a la necesidad de formar profesionales
+competentes en {area} que puedan enfrentar los desafíos contemporáneos de su disciplina.
+En el contexto del nivel {nivel}, esta materia proporciona las bases teóricas y metodológicas
+necesarias para el desarrollo de competencias profesionales avanzadas y la formación de
+investigadores capaces de contribuir al avance del conocimiento en su campo."""
+
+    def _generar_objetivo_general(self, asignatura: str, area: str) -> str:
+        """Genera objetivo general"""
+        return f"""Desarrollar en los estudiantes una comprensión integral de los fundamentos
+teóricos y metodológicos de {asignatura}, fomentando el pensamiento crítico, la capacidad
+de análisis y la aplicación práctica de conocimientos en contextos reales de {area}."""
+
+    def _generar_objetivos_especificos(self, asignatura: str, area: str) -> List[str]:
+        """Genera objetivos específicos"""
+        return [
+            f"Analizar críticamente los principales enfoques teóricos en {asignatura}",
+            f"Aplicar metodologías apropiadas para la investigación en {area}",
+            f"Evaluar críticamente fuentes académicas especializadas en {asignatura}",
+            f"Desarrollar proyectos académicos que integren teoría y práctica en {area}",
+            f"Comunicar efectivamente hallazgos académicos en formatos profesionales"
+        ]
+
+    def _definir_competencias(self, area: str) -> Dict:
+        """Define competencias del programa"""
+        competencias_genericas = random.sample(self.competencias_genericas, 4)
+
+        # Seleccionar competencias específicas según el área
+        area_key = area.lower().replace(" ", "_")
+        if area_key in self.competencias_especificas:
+            competencias_especificas = self.competencias_especificas[area_key]
+        else:
+            competencias_especificas = random.sample(
+                list(self.competencias_especificas.values())[0], 3
+            )
+
+        return {
+            "genericas": competencias_genericas,
+            "especificas": competencias_especificas[:3]
+        }
+
+    def _estructurar_contenido(self, creditos: int) -> List[Dict]:
+        """Estructura el contenido temático"""
+        unidades_base = [
+            {
+                "unidad": 1,
+                "titulo": "Fundamentos Teóricos",
+                "temas": [
+                    "Conceptos básicos y definiciones",
+                    "Marco histórico del desarrollo de la disciplina",
+                    "Principales teorías y enfoques"
+                ],
+                "horas": creditos * 3
+            },
+            {
+                "unidad": 2,
+                "titulo": "Metodología y Enfoques",
+                "temas": [
+                    "Métodos de investigación",
+                    "Técnicas de análisis",
+                    "Instrumentos de recolección de datos"
+                ],
+                "horas": creditos * 4
+            },
+            {
+                "unidad": 3,
+                "titulo": "Aplicaciones Prácticas",
+                "temas": [
+                    "Casos de estudio",
+                    "Proyectos aplicados",
+                    "Análisis de situaciones reales"
+                ],
+                "horas": creditos * 4
+            },
+            {
+                "unidad": 4,
+                "titulo": "Tendencias Actuales y Futuras",
+                "temas": [
+                    "Innovaciones recientes",
+                    "Desafíos contemporáneos",
+                    "Perspectivas futuras"
+                ],
+                "horas": creditos * 3
+            }
+        ]
+        return unidades_base
+
+    def _seleccionar_metodologia_avanzada(self) -> Dict:
+        """Selecciona metodología avanzada para educación superior"""
+        metodologia_nombre = random.choice(list(self.metodologias_universitarias.keys()))
+        return {
+            "nombre": metodologia_nombre,
+            "descripcion": self.metodologias_universitarias[metodologia_nombre]["descripcion"],
+            "caracteristicas": self.metodologias_universitarias[metodologia_nombre]["caracteristicas"],
+            "aplicacion": self.metodologias_universitarias[metodologia_nombre]["aplicacion"]
+        }
+
+    def _disenar_evaluacion_superior(self) -> Dict:
+        """Diseña sistema de evaluación para educación superior"""
+        return {
+            "enfoque": "Evaluación auténtica y formativa",
+            "instrumentos_formativos": random.sample(self.instrumentos_evaluacion["formativa"], 3),
+            "instrumentos_sumativos": random.sample(self.instrumentos_evaluacion["sumativa"], 3),
+            "criterios_evaluacion": [
+                "Calidad del análisis crítico",
+                "Originalidad y creatividad",
+                "Rigor metodológico",
+                "Claridad en la comunicación",
+                "Cumplimiento de estándares académicos"
+            ],
+            "ponderacion": {
+                "Participación y actividades formativas": "20%",
+                "Proyecto intermedio": "30%",
+                "Producto final": "40%",
+                "Autoevaluación y reflexión": "10%"
+            }
+        }
+
+    def _generar_bibliografia(self, area: str) -> Dict:
+        """Genera bibliografía básica y complementaria"""
+        return {
+            "basica": [
+                f"Autor, A. A. ({datetime.now().year}). Fundamentos de {area}. Editorial Académica.",
+                f"Autor, B. B. ({datetime.now().year-2}). Teorías contemporáneas en {area}. Editorial Universitaria.",
+                f"Autor, C. C. ({datetime.now().year-1}). Metodología de investigación en {area}. Editorial Científica."
+            ],
+            "complementaria": [
+                f"Autor, D. D. ({datetime.now().year-3}). Perspectivas críticas en {area}. Editorial de Humanidades.",
+                f"Autor, E. E. ({datetime.now().year-1}). Innovación en {area}. Editorial Tecnológica.",
+                f"Autor, F. F. ({datetime.now().year}). Tendencias actuales en {area}. Editorial Especializada."
+            ],
+            "recursos_digitales": [
+                "Artículos de revistas científicas indexadas",
+                "Capítulos de libros electrónicos especializados",
+                "Documentos técnicos y reportes de investigación",
+                "Materiales multimedia académicos"
+            ]
+        }
+
+    def _seleccionar_recursos_academicos(self) -> Dict:
+        """Selecciona recursos didácticos académicos"""
+        return {
+            "bibliograficos": random.sample(self.recursos_academicos["bibliograficos"], 2),
+            "tecnologicos": random.sample(self.recursos_academicos["tecnologicos"], 2),
+            "colaborativos": random.sample(self.recursos_academicos["colaborativos"], 2)
+        }
+
+    def _generar_cronograma(self, creditos: int) -> List[Dict]:
+        """Genera cronograma tentativo"""
+        semanas = creditos * 4  # Aproximadamente 4 semanas por crédito
+        cronograma = []
+
+        for semana in range(1, min(semanas + 1, 17)):  # Máximo 16 semanas
+            cronograma.append({
+                "semana": semana,
+                "tema": f"Tema de la semana {semana}",
+                "actividades": ["Lectura obligatoria", "Discusión en foro", "Actividad práctica"],
+                "evaluacion": "Formativa" if semana % 2 == 0 else "Ninguna"
+            })
+
+        return cronograma
+
+    def formatear_programa(self, programa: Dict) -> str:
+        """Formatea el programa para mostrarlo de forma profesional"""
+        ident = programa['identificacion']
+        texto = f"""🎓 **PROGRAMA DE ASIGNATURA**
+
+🏛️ **IDENTIFICACIÓN**
+==================
+**Nombre de la Asignatura:** {ident['nombre_asignatura']}
+**Código:** {ident['codigo']}
+**Créditos:** {ident['creditos']}
+**Área de Conocimiento:** {ident['area_conocimiento']}
+**Nivel Académico:** {ident['nivel_academico'].title()}
+**Modalidad:** {ident['modalidad'].title()}
+**Elaborado:** {ident['fecha_elaboracion']}
+
+---
+
+📘 **DESCRIPCIÓN**
+================
+{programa['descripcion']}
+
+---
+
+⚖️ **JUSTIFICACIÓN**
+==================
+{programa['justificacion']}
+
+---
+
+🎯 **OBJETIVO GENERAL**
+=====================
+{programa['objetivo_general']}
+
+---
+
+📌 **OBJETIVOS ESPECÍFICOS**
+==========================
+"""
+        for i, objetivo in enumerate(programa['objetivos_especificos'], 1):
+            texto += f"{i}. {objetivo}\n"
+
+        texto += f"""
+
+💡 **COMPETENCIAS**
+==================
+**Competencias Genéricas:**
+"""
+        for competencia in programa['competencias']['genericas']:
+            texto += f"• {competencia}\n"
+
+        texto += f"""
+**Competencias Específicas:**
+"""
+        for competencia in programa['competencias']['especificas']:
+            texto += f"• {competencia}\n"
+
+        texto += f"""
+
+📚 **CONTENIDO TEMÁTICO**
+======================
+"""
+        for unidad in programa['contenido_tematico']:
+            texto += f"""
+**Unidad {unidad['unidad']}: {unidad['titulo']}**
+Horas: {unidad['horas']}
+Temas:
+"""
+            for tema in unidad['temas']:
+                texto += f"  • {tema}\n"
+
+        texto += f"""
+
+🎓 **METODOLOGÍA**
+================
+**{programa['metodologia']['nombre'].replace('_', ' ').title()}**
+{programa['metodologia']['descripcion']}
+
+Características:
+"""
+        for caracteristica in programa['metodologia']['caracteristicas']:
+            texto += f"• {caracteristica}\n"
+
+        texto += f"""
+Aplicación: {programa['metodologia']['aplicacion']}
+
+---
+
+📊 **SISTEMA DE EVALUACIÓN**
+=========================
+**Enfoque:** {programa['evaluacion']['enfoque']}
+
+**Instrumentos Formativos:**
+"""
+        for instrumento in programa['evaluacion']['instrumentos_formativos']:
+            texto += f"• {instrumento}\n"
+
+        texto += f"""
+**Instrumentos Sumativos:**
+"""
+        for instrumento in programa['evaluacion']['instrumentos_sumativos']:
+            texto += f"• {instrumento}\n"
+
+        texto += f"""
+**Criterios de Evaluación:**
+"""
+        for criterio in programa['evaluacion']['criterios_evaluacion']:
+            texto += f"• {criterio}\n"
+
+        texto += f"""
+**Ponderación:**
+"""
+        for item, porcentaje in programa['evaluacion']['ponderacion'].items():
+            texto += f"• {item}: {porcentaje}\n"
+
+        texto += f"""
+
+📖 **BIBLIOGRAFÍA**
+==================
+**Básica:**
+"""
+        for libro in programa['bibliografia']['basica']:
+            texto += f"• {libro}\n"
+
+        texto += f"""
+**Complementaria:**
+"""
+        for libro in programa['bibliografia']['complementaria']:
+            texto += f"• {libro}\n"
+
+        texto += f"""
+**Recursos Digitales:**
+"""
+        for recurso in programa['bibliografia']['recursos_digitales']:
+            texto += f"• {recurso}\n"
+
+        return texto
+
+    def crear_rubrica_evaluacion(self, tipo_actividad: str = "ensayo_academico",
+                               nivel: str = "licenciatura") -> Dict:
+        """Crea una rúbrica de evaluación académica"""
+
+        niveles_desempeno = {
+            "excelente": {
+                "descripcion": "Supera ampliamente los estándares esperados",
+                "puntaje": "90-100"
+            },
+            "bueno": {
+                "descripcion": "Cumple satisfactoriamente con los estándares",
+                "puntaje": "80-89"
+            },
+            "satisfactorio": {
+                "descripcion": "Cumple con los requisitos mínimos",
+                "puntaje": "70-79"
+            },
+            "insuficiente": {
+                "descripcion": "No cumple con los estándares requeridos",
+                "puntaje": "0-69"
+            }
+        }
+
+        criterios_rubrica = {
+            "ensayo_academico": {
+                "titulo": "Rúbrica para Ensayo Académico",
+                "criterios": [
+                    {
+                        "nombre": "Claridad del argumento",
+                        "descripcion": "Presentación lógica y coherente de la tesis",
+                        "excelente": "Argumento impecable, bien estructurado y convincente",
+                        "bueno": "Argumento claro y bien desarrollado",
+                        "satisfactorio": "Argumento presente pero con algunas inconsistencias",
+                        "insuficiente": "Argumento débil o ausente"
+                    },
+                    {
+                        "nombre": "Uso de fuentes académicas",
+                        "descripcion": "Incorporación crítica de literatura especializada",
+                        "excelente": "Excelente selección y análisis crítico de fuentes",
+                        "bueno": "Buen uso de fuentes relevantes y adecuadamente citadas",
+                        "satisfactorio": "Uso básico de fuentes, algunas citaciones incompletas",
+                        "insuficiente": "Fuentes inadecuadas o ausencia de citación"
+                    },
+                    {
+                        "nombre": "Originalidad y pensamiento crítico",
+                        "descripcion": "Contribución personal y análisis independiente",
+                        "excelente": "Perspectiva original y análisis profundo",
+                        "bueno": "Buen nivel de análisis y reflexión crítica",
+                        "satisfactorio": "Análisis básico con algunas observaciones personales",
+                        "insuficiente": "Falta de análisis crítico o pensamiento original"
+                    }
+                ]
+            },
+            "presentacion_oral": {
+                "titulo": "Rúbrica para Presentación Oral Académica",
+                "criterios": [
+                    {
+                        "nombre": "Organización y estructura",
+                        "descripcion": "Claridad en la presentación de ideas",
+                        "excelente": "Estructura impecable, fluidez y coherencia",
+                        "bueno": "Buena organización y estructura lógica",
+                        "satisfactorio": "Estructura aceptable con algunas inconsistencias",
+                        "insuficiente": "Desorganizado o difícil de seguir"
+                    },
+                    {
+                        "nombre": "Contenido y profundidad",
+                        "descripcion": "Calidad y profundidad del contenido presentado",
+                        "excelente": "Contenido excepcionalmente profundo y relevante",
+                        "bueno": "Contenido sólido y bien fundamentado",
+                        "satisfactorio": "Contenido básico pero adecuado",
+                        "insuficiente": "Contenido superficial o irrelevante"
+                    },
+                    {
+                        "nombre": "Dominio del tema",
+                        "descripcion": "Conocimiento y seguridad en la exposición",
+                        "excelente": "Dominio total del tema, responde con autoridad",
+                        "bueno": "Buen conocimiento del tema, pocas dudas",
+                        "satisfactorio": "Conocimiento básico, algunas dudas evidentes",
+                        "insuficiente": "Falta de dominio del tema"
+                    }
+                ]
+            }
+        }
+
+        rubrica_base = criterios_rubrica.get(tipo_actividad, criterios_rubrica["ensayo_academico"])
+
+        rubrica = {
+            "titulo": rubrica_base["titulo"],
+            "tipo_actividad": tipo_actividad,
+            "nivel_academico": nivel,
+            "niveles_desempeno": niveles_desempeno,
+            "criterios": rubrica_base["criterios"],
+            "observaciones": "Esta rúbrica se aplica considerando los estándares académicos del nivel universitario"
+        }
+
+        return rubrica
+
+    def formatear_rubrica(self, rubrica: Dict) -> str:
+        """Formatea la rúbrica para mostrarla de forma clara"""
+        texto = f"""📋 **{rubrica['titulo']}**
+
+**Actividad:** {rubrica['tipo_actividad'].replace('_', ' ').title()}
+**Nivel:** {rubrica['nivel_academico'].title()}
+
+"""
+
+        # Tabla de niveles de desempeño
+        texto += "📊 **Niveles de Desempeño:**\n"
+        for nivel, info in rubrica['niveles_desempeno'].items():
+            texto += f"• **{nivel.title()}:** {info['descripcion']} ({info['puntaje']} pts)\n"
+
+        texto += f"\n---\n\n"
+
+        # Criterios de evaluación
+        texto += "🎯 **Criterios de Evaluación:**\n\n"
+        for criterio in rubrica['criterios']:
+            texto += f"**{criterio['nombre']}**\n"
+            texto += f"_{criterio['descripcion']}_\n\n"
+            texto += "| Nivel | Descripción |\n"
+            texto += "|-------|-------------|\n"
+            texto += f"| Excelente | {criterio['excelente']} |\n"
+            texto += f"| Bueno | {criterio['bueno']} |\n"
+            texto += f"| Satisfactorio | {criterio['satisfactorio']} |\n"
+            texto += f"| Insuficiente | {criterio['insuficiente']} |\n\n"
+
+        texto += f"📝 {rubrica['observaciones']}"
+
+        return texto
+
+    def responder(self, mensaje: str) -> str:
+        mensaje = mensaje.lower().strip()
+        self.conversacion.append({"usuario": mensaje, "timestamp": datetime.now()})
+
+        # Saludos
+        if any(saludo in mensaje for saludo in ["hola", "buenos", "hello", "hi"]):
+            return self.saludar()
+
+        # Programa de asignatura
+        elif "programa" in mensaje and ("asignatura" in mensaje or "materia" in mensaje):
+            return """🎓 ¡Perfecto! Para crear un programa de asignatura necesito:
+
+1. Nombre de la asignatura
+2. Área de conocimiento
+3. Número de créditos
+4. Nivel académico (licenciatura/maestría/doctorado)
+5. Modalidad (presencial/virtual/híbrida)
+
+Ejemplo: 'Crea un programa de Inteligencia Artificial para Ingeniería de 4 créditos en licenciatura'"""
+
+        # Generar programa específico
+        elif "crear programa" in mensaje or ("programa" in mensaje and "de" in mensaje):
+            # Extraer información del mensaje
+            asignatura = self._extraer_asignatura_superior(mensaje)
+            area = self._extraer_area(mensaje)
+            creditos = self._extraer_creditos(mensaje)
+            nivel = self._extraer_nivel_superior(mensaje)
+            modalidad = self._extraer_modalidad(mensaje)
+
+            if not asignatura:
+                return "Por favor, especifica la asignatura. Ejemplo: 'Programa de Estadística Avanzada'"
+
+            programa = self.crear_programa_asignatura(asignatura, creditos, area, nivel, modalidad)
+            return self.formatear_programa(programa)
+
+        # Rúbrica de evaluación
+        elif "rúbrica" in mensaje or "rubrica" in mensaje or "evaluación" in mensaje:
+            return """📋 ¿Qué tipo de rúbrica necesitas?
+
+Puedo crear rúbricas para:
+1. Ensayos académicos
+2. Presentaciones orales
+3. Proyectos de investigación
+4. Participación en seminarios
+
+Ejemplo: 'Hazme una rúbrica para ensayo académico de maestría'"""
+
+        # Crear rúbrica específica
+        elif "rubrica" in mensaje or "rúbrica" in mensaje:
+            tipo = "ensayo_academico"
+            nivel = "licenciatura"
+
+            if "presentacion" in mensaje or "oral" in mensaje:
+                tipo = "presentacion_oral"
+            elif "proyecto" in mensaje:
+                tipo = "proyecto_investigacion"
+
+            if "maestría" in mensaje or "maestria" in mensaje:
+                nivel = "maestría"
+            elif "doctorado" in mensaje:
+                nivel = "doctorado"
+
+            rubrica = self.crear_rubrica_evaluacion(tipo, nivel)
+            return self.formatear_rubrica(rubrica)
+
+        # Configuración del usuario
+        elif "soy" in mensaje:
+            if "docente" in mensaje or "profesor" in mensaje:
+                self.tipo_usuario = "docente"
+            elif "estudiante" in mensaje:
+                self.tipo_usuario = "estudiante"
+            elif "investigador" in mensaje:
+                self.tipo_usuario = "investigador"
+            elif "coordinador" in mensaje or "director" in mensaje:
+                self.tipo_usuario = "coordinador"
+            return f"👋 ¡Bienvenido/a como {self.tipo_usuario} universitario/a! ¿En qué puedo ayudarte?"
+
+        # Despedida
+        elif any(despedida in mensaje for despedida in ["adiós", "chao", "gracias", "bye"]):
+            return "🎓 ¡Hasta luego! Recuerda que estoy aquí para ayudarte con programas académicos, rúbricas y recursos pedagógicos universitarios. ¡Éxito en tu labor académica!"
+
+        # Respuesta por defecto
+        else:
+            return """🤔 ¿En qué puedo ayudarte hoy en el ámbito de la Educación Superior?
+
+Puedo:
+✅ Crear programas completos de asignaturas
+✅ Generar rúbricas de evaluación académica
+✅ Diseñar contenidos curriculares universitarios
+✅ Sugerir metodologías avanzadas de enseñanza
+✅ Desarrollar sistemas de evaluación auténtica
+
+Ejemplos:
+• 'Crea un programa de Metodología de la Investigación de 3 créditos'
+• 'Hazme una rúbrica para presentación oral de maestría'
+• 'Genera un programa de Estadística para Psicología'"""
+
+    def _extraer_asignatura_superior(self, mensaje: str) -> str:
+        """Extrae la asignatura del mensaje"""
+        # Palabras clave que NO son asignaturas
+        ignorar = ["programa", "crear", "hacer", "generar", "sobre", "de", "la", "el", "en",
+                  "para", "con", "créditos", "creditos", "licenciatura", "maestría", "doctorado",
+                  "presencial", "virtual", "híbrida", "hibrida"]
+
+        palabras = mensaje.split()
+        asignatura_palabras = [palabra for palabra in palabras
+                             if palabra.lower() not in ignorar and len(palabra) > 3]
+
+        # Buscar asignaturas conocidas
+        asignaturas_comunes = [
+            "metodología", "metodologia", "estadística", "estadistica", "inteligencia artificial",
+            "filosofía", "filosofia", "psicología", "psicologia", "sociología", "sociologia",
+            "economía", "economia", "administración", "administracion", "derecho", "literatura",
+            "química", "quimica", "física", "fisica", "matemáticas", "matematicas"
+        ]
+
+        for asignatura in asignaturas_comunes:
+            if asignatura in mensaje:
+                return asignatura.title()
+
+        if asignatura_palabras:
+            return " ".join(asignatura_palabras[:3]).title()
+        return "Asignatura General"
+
+    def _extraer_area(self, mensaje: str) -> str:
+        """Extrae el área de conocimiento"""
+        areas = {
+            "ciencias_sociales": ["sociales", "sociología", "psicología", "antropología"],
+            "ciencias_exactas": ["matemáticas", "física", "química", "estadística"],
+            "humanidades": ["filosofía", "literatura", "historia", "arte"],
+            "ciencias_de_la_salud": ["medicina", "enfermería", "psicología_clínica"],
+            "ingeniería": ["ingeniería", "computación", "sistemas", "industrial"]
+        }
+
+        for area, palabras in areas.items():
+            if any(palabra in mensaje for palabra in palabras):
+                return area.replace("_", " ").title()
+
+        return "Ciencias Sociales y Humanidades"
+
+    def _extraer_creditos(self, mensaje: str) -> int:
+        """Extrae el número de créditos"""
+        import re
+        numeros = re.findall(r'\d+', mensaje)
+        for num in numeros:
+            if 1 <= int(num) <= 10:  # Créditos típicos universitarios
+                return int(num)
+        return 3  # Por defecto
+
+    def _extraer_nivel_superior(self, mensaje: str) -> str:
+        """Extrae el nivel académico"""
+        if "doctorado" in mensaje:
+            return "doctorado"
+        elif "maestría" in mensaje or "maestria" in mensaje:
+            return "maestría"
+        else:
+            return "licenciatura"
+
+    def _extraer_modalidad(self, mensaje: str) -> str:
+        """Extrae la modalidad"""
+        if "virtual" in mensaje:
+            return "virtual"
+        elif "híbrida" in mensaje or "hibrida" in mensaje:
+            return "híbrida"
+        else:
+            return "presencial"
+
+# Ejecutar el chatbot
+def main():
+    bot = ChatbotEduSuperior()
+    print("🎓 Chatbot Pedagógico para Educación Superior")
+    print("=" * 60)
+    print(bot.saludar())
+
+    while True:
+        try:
+            mensaje = input("\n👤 Tú: ")
+            if mensaje.lower() in ['salir', 'exit', 'cerrar', 'fin']:
+                print("🤖 Bot: ¡Adiós! 🎓")
+                break
+
+            respuesta = bot.responder(mensaje)
+            print(f"\n🤖 Bot: {respuesta}")
+
+        except KeyboardInterrupt:
+            print("\n\n👋 ¡Hasta luego!")
+            break
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            print("🤖 Bot: Lo siento, tuve un problema. ¿Puedes reformular tu pregunta?")
+
+if __name__ == "__main__":
+    main()
